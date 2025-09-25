@@ -30,51 +30,50 @@ body {
   overscroll-behavior: none;
 }
 
-/* Mobile Container - Optimized for Touch */
+/* Mobile Container - Fixed for Mobile Browsers */
 .mobile-container {
   width: 100%;
+  /* Fix mobile viewport height issues */
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   background-color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  /* Mobile-friendly padding */
-  padding: env(safe-area-inset-top) 20px 30px 20px;
-  padding-bottom: max(30px, env(safe-area-inset-bottom));
-  /* Perfect scrolling */
-  overflow-y: auto;
+  /* Remove flex that's causing issues */
+  position: relative;
+  /* Mobile-friendly padding - much smaller */
+  padding: 10px 16px 20px 16px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  /* Enable native mobile scrolling */
+  overflow-y: scroll;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  /* Prevent overscroll bounce */
-  overscroll-behavior: contain;
+  /* Remove overscroll behavior that causes issues */
+  overscroll-behavior-y: none;
 }
 
-/* Mobile-Optimized Header */
+/* Compact Mobile Header */
 .header {
   text-align: center;
-  padding: 20px 0 15px 0;
-  border-bottom: 2px solid #f0f0f0;
+  /* Much more compact */
+  padding: 12px 0 8px 0;
+  border-bottom: 1px solid #e0e0e0;
   background-color: #ffffff;
-  /* Sticky header for mobile navigation */
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  /* Smooth shadow for depth */
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 25px;
+  /* Remove sticky to save space */
+  margin-bottom: 15px;
 }
 
 .header h1 {
   color: #000000;
-  font-size: 28px; /* Bigger for mobile */
-  margin-bottom: 8px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  font-size: 22px; /* Smaller to save space */
+  margin-bottom: 4px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
 }
 
 .header p {
   color: #666666;
-  font-size: 16px; /* Larger text for mobile */
-  margin: 4px 0;
+  font-size: 14px; /* Smaller to save space */
+  margin: 2px 0;
 }
 
 /* Mobile Loading */
@@ -102,32 +101,30 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* Mobile-Optimized Buttons */
+/* Compact Mobile Buttons */
 .btn {
   background-color: #F4A99C;
   color: #000000;
   border: none;
-  /* Much larger padding for mobile */
-  padding: 20px 24px;
-  border-radius: 16px; /* More rounded for modern feel */
+  /* More compact padding */
+  padding: 16px 20px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 18px; /* Bigger text for mobile */
-  font-weight: 600; /* Bolder for readability */
+  font-size: 16px; /* Slightly smaller but still readable */
+  font-weight: 600;
   width: 100%;
-  margin-bottom: 20px; /* More space between buttons */
+  margin-bottom: 12px; /* Less space between buttons */
   transition: all 0.2s ease;
-  /* Perfect mobile touch target */
-  min-height: 60px; /* Apple's recommended minimum */
+  /* Good touch target */
+  min-height: 50px; /* Smaller but still touchable */
   /* Prevent text selection on mobile */
   user-select: none;
   -webkit-user-select: none;
   /* Remove all browser styling */
   -webkit-appearance: none;
   appearance: none;
-  /* Mobile-friendly shadow */
-  box-shadow: 0 3px 10px rgba(244, 169, 156, 0.4);
-  /* Better typography */
-  letter-spacing: 0.3px;
+  /* Lighter shadow */
+  box-shadow: 0 2px 6px rgba(244, 169, 156, 0.3);
 }
 
 .btn:active {
@@ -179,22 +176,23 @@ body {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  /* Larger padding for mobile */
-  padding: 20px 16px;
+  /* More compact for mobile */
+  padding: 14px 12px;
   border: 2px solid #e1e5e9;
-  border-radius: 12px; /* More rounded for modern mobile feel */
-  font-size: 18px; /* Larger text prevents zoom on iOS */
+  border-radius: 8px;
+  font-size: 16px; /* Prevents iOS zoom but more compact */
   color: #000000;
   background-color: #ffffff;
-  /* Perfect mobile touch target */
-  min-height: 60px;
+  /* Adequate touch target */
+  min-height: 48px;
   /* Remove all browser styling */
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  /* Better mobile interaction */
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  /* Subtle shadow */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  margin-bottom: 8px;
 }
 
 .form-group input:focus,
@@ -714,4 +712,50 @@ body {
 /* Ensure buttons are always accessible */
 .btn {
   margin-bottom: 10px !important;
+}
+
+/* Critical Mobile Viewport Fixes */
+html {
+  /* Fix iOS viewport height */
+  height: -webkit-fill-available;
+}
+
+body {
+  /* Fix scrolling on mobile */
+  position: relative;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Fix mobile container height issues */
+#root {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Make forms scroll properly */
+.form-container, .roster-form {
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Fix mobile keyboard issues */
+@media screen and (max-height: 500px) {
+  .mobile-container {
+    min-height: auto;
+    padding-top: 5px;
+  }
+
+  .header {
+    padding: 5px 0;
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
 }
