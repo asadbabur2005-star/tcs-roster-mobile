@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Mobile server runs on port 5001 to avoid conflict with web app
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://tcs-roster-mobile.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
