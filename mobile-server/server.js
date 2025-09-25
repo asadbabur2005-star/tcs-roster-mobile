@@ -40,9 +40,10 @@ db.serialize(() => {
   )`);
 
   // Create admin user
-  const adminPassword = bcrypt.hashSync('admin123', 10);
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const hashedPassword = bcrypt.hashSync(adminPassword, 10);
   db.run(`INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)`,
-    ['admin', adminPassword, 'admin']);
+    ['admin', hashedPassword, 'admin']);
 
   console.log('✅ Database initialized');
 });
@@ -54,7 +55,13 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'capacitor://localhost', 'ionic://localhost'],
+  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://tcs-roster-mobile.netlify.app',
+    'capacitor://localhost',
+    'ionic://localhost'
+  ],
   credentials: true
 }));
 
@@ -338,7 +345,7 @@ app.get('/api/roster/updates', authenticateToken, (req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 TCS Roster Mobile Server running on port ${PORT}`);
   console.log(`📱 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔐 Admin credentials: admin / admin123`);
+  console.log(`🔐 Admin credentials: admin / ${process.env.ADMIN_PASSWORD || 'admin123'}`);
   console.log(`👥 Carers can access via name selection (no password)`);
   console.log(`💾 Using SQLite database: ${dbPath}\n`);
 });
