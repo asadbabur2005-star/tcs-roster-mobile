@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TCS Roster Mobile</string>
+    <string name="title_activity_main">TCS Roster Mobile</string>
+    <string name="package_name">com.tcs.roster.mobile</string>
+    <string name="custom_url_scheme">com.tcs.roster.mobile</string>
+</resources>

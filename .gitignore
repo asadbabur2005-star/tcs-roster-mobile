@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+mobile-server/node_modules/
+
+# Production builds
+build/
+dist/
+
+# Environment variables
+.env
+mobile-server/.env
+
+# Database files (we'll recreate in production)
+mobile-server/roster.db
+*.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Capacitor
+android/.gradle/
+android/build/
+ios/build/
+
+# Cache
+.cache/
+.temp/

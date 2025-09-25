@@ -1,0 +1,32 @@
+{
+  "short_name": "TCS Roster",
+  "name": "TCS Roster Mobile - Carer Shift Management",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#F4A99C",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["healthcare", "productivity", "business"],
+  "description": "Mobile app for managing carer shift rosters and schedules",
+  "lang": "en-US",
+  "prefer_related_applications": false
+}

@@ -1,0 +1,24 @@
+{
+  "appId": "com.tcs.roster.mobile",
+  "appName": "TCS Roster Mobile",
+  "webDir": "build",
+  "server": {
+    "allowNavigation": [
+      "localhost:*",
+      "192.168.*",
+      "10.0.2.2:*"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#F4A99C",
+      "showSpinner": true,
+      "spinnerColor": "#ffffff"
+    },
+    "StatusBar": {
+      "style": "default",
+      "backgroundColor": "#F4A99C"
+    }
+  }
+}

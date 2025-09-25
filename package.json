@@ -1,0 +1,60 @@
+{
+  "name": "tcs-roster-mobile",
+  "version": "1.0.0",
+  "description": "TCS Roster Mobile App - Carer shift management for Android/iOS",
+  "private": true,
+  "homepage": ".",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "dev": "concurrently \"cd mobile-server && npm start\" \"npm start\"",
+    "build:prod": "npm run build",
+    "server": "cd mobile-server && npm start",
+    "server:install": "cd mobile-server && npm install",
+    "android": "npx cap run android",
+    "android:build": "npm run build && npx cap copy && npx cap run android",
+    "sync": "npx cap sync"
+  },
+  "keywords": [
+    "roster",
+    "mobile",
+    "healthcare",
+    "carer",
+    "management",
+    "capacitor"
+  ],
+  "author": "TCS Team",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "ajv": "^8.17.1",
+    "axios": "^1.3.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.1",
+    "react-scripts": "^5.0.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
+    "concurrently": "^7.6.0",
+    "jest-environment-jsdom": "^29.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
