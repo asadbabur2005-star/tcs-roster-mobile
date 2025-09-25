@@ -56,7 +56,8 @@ self.addEventListener('fetch', function(event) {
   const requestUrl = new URL(event.request.url);
 
   // Handle API requests with network-first strategy
-  if (requestUrl.pathname.startsWith('/api/')) {
+  // Check if it's an API request to our backend
+  if (requestUrl.pathname.startsWith('/api/') || requestUrl.origin.includes('onrender.com') || requestUrl.pathname === '/health') {
     event.respondWith(
       handleAPIRequest(event.request)
     );
@@ -104,21 +105,44 @@ self.addEventListener('fetch', function(event) {
 // Handle API requests with caching for offline support
 async function handleAPIRequest(request) {
   try {
-    // Try network first
-    const networkResponse = await fetch(request);
+    console.log('[SW] Attempting API request to:', request.url);
+
+    // Try network first with proper CORS handling
+    const networkResponse = await fetch(request, {
+      mode: 'cors',
+      credentials: 'include'
+    });
+
+    console.log('[SW] Network response status:', networkResponse.status);
 
     if (networkResponse.ok) {
-      // Cache successful API responses
-      const cache = await caches.open(API_CACHE);
-      cache.put(request, networkResponse.clone());
-      console.log('[SW] Cached API response:', request.url);
+      // Cache successful API responses (but only for GET requests)
+      if (request.method === 'GET') {
+        const cache = await caches.open(API_CACHE);
+        cache.put(request, networkResponse.clone());
+        console.log('[SW] Cached API response:', request.url);
+      }
     }
 
     return networkResponse;
   } catch (error) {
-    console.log('[SW] Network failed, trying cache:', request.url);
+    console.log('[SW] Network failed for:', request.url, 'Error:', error);
 
-    // Try cache as fallback
+    // For non-GET requests, don't try cache - just fail
+    if (request.method !== 'GET') {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Network request failed: ' + error.message
+        }),
+        {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Try cache as fallback for GET requests only
     const cachedResponse = await caches.match(request);
 
     if (cachedResponse) {
