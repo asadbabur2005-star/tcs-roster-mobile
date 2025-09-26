@@ -45,7 +45,7 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-form">
-        <h1>TC's Roster Mobile</h1>
+        <h1>TC's Roster</h1>
         <p>Admin Login</p>
 
         <form onSubmit={handleSubmit}>
@@ -92,18 +92,6 @@ function Login() {
           </button>
         </form>
 
-        <div style={{
-          marginTop: '20px',
-          padding: '15px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          fontSize: '14px',
-          color: '#666'
-        }}>
-          <strong>Default credentials:</strong><br />
-          Username: admin<br />
-          Password: admin123
-        </div>
       </div>
     </div>
   );

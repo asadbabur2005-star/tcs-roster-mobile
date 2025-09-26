@@ -9,11 +9,23 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? undefined : 5001);
 const JWT_SECRET = process.env.JWT_SECRET || 'mobile-roster-secret-key-2024';
 
 // Database setup
-const dbPath = path.join(__dirname, 'roster.db');
+// In production (Render), use /opt/render/project/src/data directory for persistence
+const dbPath = process.env.NODE_ENV === 'production'
+  ? path.join(process.cwd(), 'data', 'roster.db')
+  : path.join(__dirname, 'roster.db');
+
+// Ensure data directory exists in production
+if (process.env.NODE_ENV === 'production') {
+  const dataDir = path.dirname(dbPath);
+  if (!require('fs').existsSync(dataDir)) {
+    require('fs').mkdirSync(dataDir, { recursive: true });
+  }
+}
+
 const db = new sqlite3.Database(dbPath);
 
 // Initialize database tables
@@ -58,22 +70,32 @@ app.use(cors({
   origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://192.168.0.106:3001',
     'https://tcs-roster-mobile.netlify.app',
+    'https://your-netlify-app.netlify.app', // Replace with actual Netlify URL
     'capacitor://localhost',
     'ionic://localhost'
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  optionsSuccessStatus: 200
 }));
 
 app.use(express.json());
 app.use(cookieParser());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
+// Rate limiting for production
+if (process.env.NODE_ENV === 'production') {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // limit each IP to 500 requests per 15 minutes in production
+    message: { error: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use('/api/', limiter);
+}
 
 // Auth middleware
 const authenticateToken = (req, res, next) => {
@@ -200,7 +222,8 @@ app.post('/api/auth/carer-login', (req, res) => {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-          maxAge: 24 * 60 * 60 * 1000
+          maxAge: 24 * 60 * 60 * 1000,
+          domain: process.env.NODE_ENV === 'production' ? undefined : undefined
         });
 
         res.json({
@@ -323,6 +346,49 @@ app.get('/api/rosters', authenticateToken, requireAdmin, (req, res) => {
   });
 });
 
+// Change Password endpoint
+app.post('/api/auth/change-password', authenticateToken, requireAdmin, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current password and new password are required' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+
+  // Get current user data
+  db.get(`SELECT password FROM users WHERE id = ?`, [userId], async (err, user) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify current password
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password in database
+    db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashedNewPassword, userId], function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to update password' });
+      }
+
+      res.json({ message: 'Password changed successfully' });
+    });
+  });
+});
+
 // Server-Sent Events for real-time updates
 app.get('/api/roster/updates', authenticateToken, (req, res) => {
   res.writeHead(200, {
@@ -343,7 +409,7 @@ app.get('/api/roster/updates', authenticateToken, (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 TCS Roster Mobile Server running on port ${PORT}`);
   console.log(`📱 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Admin credentials: admin / ${process.env.ADMIN_PASSWORD || 'admin123'}`);

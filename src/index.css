@@ -7,73 +7,75 @@
 }
 
 html {
-  font-size: 16px; /* Base font size for mobile */
-  height: 100%;
-  overflow-x: hidden;
+  font-size: 16px;
+  /* Complete reset for mobile scrolling */
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8f9fa;
+  background-color: #f5f5f5;
   line-height: 1.5;
   color: #000000;
-  font-size: 18px; /* Larger base font for mobile */
-  height: 100%;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  /* Remove all height constraints */
+  height: auto;
+  min-height: 100vh;
   overflow-x: hidden;
-  /* Mobile optimizations */
+  overflow-y: visible;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   -webkit-overflow-scrolling: touch;
-  /* Prevent iOS bounce */
-  overscroll-behavior: none;
+  overscroll-behavior: auto;
+  /* Allow normal scrolling */
+  touch-action: auto;
 }
 
 /* Mobile Container - Fixed for Mobile Browsers */
 .mobile-container {
   width: 100%;
-  /* Fix mobile viewport height issues */
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  background-color: #ffffff;
-  /* Remove flex that's causing issues */
+  background-color: #f5f5f5;
   position: relative;
-  /* Mobile-friendly padding - much smaller */
-  padding: 10px 16px 20px 16px;
-  padding-top: max(10px, env(safe-area-inset-top));
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
-  /* Enable native mobile scrolling */
-  overflow-y: scroll;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  /* Remove overscroll behavior that causes issues */
-  overscroll-behavior-y: none;
+  padding: 0;
+  /* Complete reset - no height constraints at all */
+  height: auto;
+  min-height: auto;
+  max-height: none;
+  /* Allow natural document flow */
+  overflow: visible;
+  /* Reset all scroll behaviors */
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior: auto;
 }
 
 /* Compact Mobile Header */
 .header {
   text-align: center;
-  /* Much more compact */
-  padding: 12px 0 8px 0;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 30px 20px 20px 20px;
   background-color: #ffffff;
-  /* Remove sticky to save space */
-  margin-bottom: 15px;
+  margin-bottom: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .header h1 {
   color: #000000;
-  font-size: 22px; /* Smaller to save space */
-  margin-bottom: 4px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
+  font-size: 32px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .header p {
   color: #666666;
-  font-size: 14px; /* Smaller to save space */
-  margin: 2px 0;
+  font-size: 16px;
+  margin: 4px 0;
 }
 
 /* Mobile Loading */
@@ -106,25 +108,20 @@ body {
   background-color: #F4A99C;
   color: #000000;
   border: none;
-  /* More compact padding */
-  padding: 16px 20px;
-  border-radius: 12px;
+  padding: 18px 20px;
+  border-radius: 15px;
   cursor: pointer;
-  font-size: 16px; /* Slightly smaller but still readable */
+  font-size: 18px;
   font-weight: 600;
   width: 100%;
-  margin-bottom: 12px; /* Less space between buttons */
+  margin-bottom: 15px;
   transition: all 0.2s ease;
-  /* Good touch target */
-  min-height: 50px; /* Smaller but still touchable */
-  /* Prevent text selection on mobile */
+  min-height: 56px;
   user-select: none;
   -webkit-user-select: none;
-  /* Remove all browser styling */
   -webkit-appearance: none;
   appearance: none;
-  /* Lighter shadow */
-  box-shadow: 0 2px 6px rgba(244, 169, 156, 0.3);
+  box-shadow: 0 4px 12px rgba(244, 169, 156, 0.3);
 }
 
 .btn:active {
@@ -217,8 +214,8 @@ body {
 
 .login-form {
   background-color: white;
-  padding: 40px 30px;
-  border-radius: 16px;
+  padding: 50px 30px;
+  border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   text-align: center;
   width: 100%;
@@ -243,23 +240,25 @@ body {
   background-color: #F4A99C;
   color: #000000;
   border: none;
-  padding: 18px 30px;
-  border-radius: 12px;
+  padding: 20px 30px;
+  border-radius: 15px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  margin: 8px 0;
+  margin: 12px 0;
   width: 100%;
-  min-height: 56px;
+  min-height: 60px;
   transition: all 0.3s ease;
   -webkit-appearance: none;
   appearance: none;
   user-select: none;
+  box-shadow: 0 4px 8px rgba(244, 169, 156, 0.3);
 }
 
 .login-button:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
   background-color: #e89284;
+  box-shadow: 0 2px 4px rgba(244, 169, 156, 0.5);
 }
 
 /* Roster Day Sections */
@@ -359,14 +358,17 @@ body {
   align-items: center;
   margin-bottom: 15px;
   background-color: white;
-  padding: 15px;
+  padding: 12px;
   border-radius: 8px;
   border: 2px solid #dee2e6;
+  /* Ensure it wraps on mobile */
+  flex-wrap: wrap;
 }
 
 .carer-name-input {
   flex: 1;
-  padding: 16px;
+  min-width: 200px;
+  padding: 14px;
   border: 2px solid #ddd;
   border-radius: 8px;
   font-size: 16px;
@@ -407,17 +409,19 @@ body {
   background-color: #F4A99C;
   color: #000000;
   border: none;
-  padding: 12px 18px;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  min-height: 44px;
-  min-width: 80px;
+  min-height: 48px;
+  min-width: 90px;
   transition: all 0.3s ease;
   -webkit-appearance: none;
   appearance: none;
   user-select: none;
+  /* Ensure button is always visible */
+  flex-shrink: 0;
 }
 
 .remove-carer-btn:active {
@@ -520,11 +524,12 @@ body {
 
 /* Dashboard/Roster Display */
 .shift-card {
-  background-color: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 20px;
-  margin: 0 20px 20px 20px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 25px;
+  margin: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: none;
 }
 
 .shift-header {
@@ -663,6 +668,60 @@ body {
   }
 }
 
+/* Dashboard Content Area */
+.dashboard-content {
+  background-color: #ffffff;
+  border-radius: 20px 20px 0 0;
+  padding: 30px 0 30px 0;
+  margin-top: 0;
+  position: relative;
+  /* Enable scrolling within content area */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Flexible height */
+  flex: 1;
+  min-height: 0;
+}
+
+.schedule-title {
+  text-align: center;
+  color: #000000;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 30px 0;
+  padding: 0 20px;
+}
+
+.no-roster-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 40px 30px;
+  margin: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.no-roster-card p {
+  color: #666666;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.management-section {
+  background-color: #ffffff;
+  padding: 30px 20px;
+  margin-top: 20px;
+}
+
+.management-title {
+  text-align: center;
+  color: #000000;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 25px;
+}
+
 /* High contrast support */
 @media (prefers-contrast: high) {
   .btn {
@@ -693,19 +752,75 @@ body {
   padding-bottom: 40px;
 }
 
+/* Roster Form Container */
+.roster-form-container {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  overflow-y: visible;
+  padding: 0;
+  /* Critical: Allow content to expand */
+  min-height: auto;
+}
+
+/* Better mobile responsive behavior */
+@media screen and (max-width: 480px) {
+  .mobile-container {
+    /* Remove ALL height constraints */
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+  }
+
+  .dashboard-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .shift-card {
+    margin: 10px 15px 15px 15px;
+  }
+
+  /* Mobile form fixes */
+  .carer-input {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .carer-name-input {
+    min-width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .remove-carer-btn {
+    align-self: center;
+    min-width: 120px;
+  }
+
+  .day-section {
+    margin: 10px 15px 20px 15px;
+  }
+
+  .shifts-container {
+    padding: 15px;
+  }
+}
+
 /* Fix for small screens */
 @media screen and (max-height: 700px) {
   .header {
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 20px 20px 15px 20px;
+    margin-bottom: 5px;
   }
 
   .header h1 {
-    font-size: 20px;
+    font-size: 28px;
   }
 
-  .mobile-container {
-    padding-top: 10px;
+  .dashboard-content {
+    padding-top: 20px;
   }
 }
 
@@ -716,21 +831,29 @@ body {
 
 /* Critical Mobile Viewport Fixes */
 html {
-  /* Fix iOS viewport height */
-  height: -webkit-fill-available;
+  /* Allow natural scrolling on all mobile browsers */
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 body {
   /* Fix scrolling on mobile */
   position: relative;
-  height: 100%;
+  height: auto;
+  min-height: 100vh;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Fix mobile container height issues */
 #root {
-  height: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  height: auto;
   overflow-x: hidden;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Make forms scroll properly */
@@ -757,5 +880,150 @@ body {
     min-height: 44px;
     padding: 12px 16px;
     margin-bottom: 8px;
+  }
+}
+
+/* Multi-Step Roster Creation Styles */
+.step-indicator {
+  text-align: center;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: rgba(244, 169, 156, 0.1);
+  border-radius: 8px;
+  border: 1px solid #F4A99C;
+}
+
+.step-indicator span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Roster Summary Styles */
+.roster-summary {
+  margin: 20px 0;
+}
+
+.day-summary {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #dee2e6;
+}
+
+.day-summary h3 {
+  color: #F4A99C;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-align: center;
+  background-color: rgba(244, 169, 156, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.shift-summary {
+  margin-bottom: 15px;
+}
+
+.shift-summary h4 {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.shift-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.shift-summary li {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 10px 15px;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.instructions-summary {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #dee2e6;
+}
+
+.instructions-summary h4 {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.instructions-summary p {
+  color: #666;
+  font-style: italic;
+  line-height: 1.4;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* Dark mode for new components */
+@media (prefers-color-scheme: dark) {
+  .step-indicator {
+    background-color: rgba(244, 169, 156, 0.2);
+    border-color: #F4A99C;
+  }
+
+  .step-indicator span {
+    color: #ffffff;
+  }
+
+  .day-summary {
+    background-color: #2d2d2d;
+    border-color: #404040;
+  }
+
+  .day-summary h3 {
+    background-color: rgba(244, 169, 156, 0.2);
+    color: #F4A99C;
+  }
+
+  .shift-summary h4 {
+    background-color: #404040;
+    color: #ffffff;
+  }
+
+  .shift-summary li {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #ffffff;
+  }
+
+  .instructions-summary h4 {
+    color: #ffffff;
+  }
+
+  .instructions-summary p {
+    background-color: #404040;
+    color: #cccccc;
   }
 }

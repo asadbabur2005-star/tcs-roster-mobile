@@ -56,7 +56,14 @@ const RosterForm = ({
   }, [onSubmit, error]);
 
   return (
-    <div role="main" id="main-content" className="mobile-container">
+    <div role="main" id="main-content" style={{
+      width: '100%',
+      height: 'auto',
+      overflow: 'visible',
+      padding: '0',
+      margin: '0',
+      border: '2px solid orange'
+    }}>
       {error && (
         <div
           id={errorId}
@@ -145,6 +152,7 @@ const RosterForm = ({
                       })}
                     </div>
 
+
                   </div>
 
                   {/* Evening Shift */}
@@ -175,6 +183,7 @@ const RosterForm = ({
                         </div>
                       ))}
                     </div>
+
 
                   </div>
 

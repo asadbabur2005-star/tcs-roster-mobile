@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: tcs-roster-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    autoDeploy: false
+    env: production
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://tcs-roster-mobile.netlify.app,https://your-netlify-app.netlify.app
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

@@ -76,29 +76,47 @@ function RosterCreate() {
   }
 
   return (
-    <div>
+    <div style={{
+      width: '100%',
+      background: '#f5f5f5',
+      padding: '0',
+      margin: '0',
+      // Complete override of all constraints
+      position: 'static',
+      height: 'auto',
+      minHeight: 'auto',
+      maxHeight: 'none',
+      overflow: 'visible',
+      border: '3px solid green'
+    }}>
       <div className="header">
         <h1>Create Weekly Roster</h1>
         <p>Set up the carer schedule for the upcoming week</p>
       </div>
 
-      <RosterForm
-        rosterData={rosterData}
-        activeDays={activeDays}
-        dayNames={dayNames}
-        dayLabels={dayLabels}
-        toggleDay={toggleDay}
-        addCarer={addCarer}
-        removeCarer={removeCarer}
-        updateCarerName={updateCarerName}
-        updateInstructions={updateInstructions}
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        saving={saving}
-        error={error}
-        submitButtonText="Create Roster"
-        showDayToggle={true}
-      />
+      <div style={{
+        padding: '20px 0 100px 0',
+        height: 'auto',
+        overflow: 'visible'
+      }}>
+        <RosterForm
+          rosterData={rosterData}
+          activeDays={activeDays}
+          dayNames={dayNames}
+          dayLabels={dayLabels}
+          toggleDay={toggleDay}
+          addCarer={addCarer}
+          removeCarer={removeCarer}
+          updateCarerName={updateCarerName}
+          updateInstructions={updateInstructions}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          saving={saving}
+          error={error}
+          submitButtonText="Create Roster"
+          showDayToggle={true}
+        />
+      </div>
     </div>
   );
 }

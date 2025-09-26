@@ -13,7 +13,8 @@ root.render(
 );
 
 // Service Worker registration (for offline capabilities)
-if ('serviceWorker' in navigator) {
+// Disabled for local development to avoid API conflicts
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {

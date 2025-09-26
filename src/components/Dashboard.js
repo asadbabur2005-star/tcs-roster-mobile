@@ -7,6 +7,7 @@ function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [todayRoster, setTodayRoster] = useState(null);
+  const [hasAnyRoster, setHasAnyRoster] = useState(false);
   const [currentDay, setCurrentDay] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,12 +27,15 @@ function Dashboard() {
 
         if (result.success) {
           if (result.data.roster && result.data.roster.data) {
+            setHasAnyRoster(true);
             const dayRoster = result.data.roster.data[dayName.toLowerCase()];
             setTodayRoster(dayRoster);
           } else {
+            setHasAnyRoster(false);
             setTodayRoster(null);
           }
         } else {
+          setHasAnyRoster(false);
           setError(result.error);
         }
       } catch (err) {
@@ -107,23 +111,17 @@ function Dashboard() {
   }
 
   return (
-    <div className="mobile-container">
+    <div className="mobile-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', maxHeight: '-webkit-fill-available' }}>
       <div className="header">
         <h1>TC's Roster</h1>
         <p>Welcome, {getUserDisplayName()}</p>
-        <p style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+        <p style={{ fontSize: '16px', color: '#666', marginTop: '5px' }}>
           {user.role === 'admin' ? 'Administrator' : 'Carer View'}
         </p>
       </div>
 
-      <div style={{ padding: '0 0 20px 0' }}>
-        <h2 style={{
-          color: '#000000',
-          marginBottom: '20px',
-          textAlign: 'center',
-          fontSize: '20px',
-          fontWeight: '600'
-        }}>
+      <div className="dashboard-content">
+        <h2 className="schedule-title">
           Today's Schedule - {currentDay}
         </h2>
 
@@ -169,41 +167,35 @@ function Dashboard() {
                 border: '2px solid #b3d9ff'
               }}>
                 <strong style={{ color: '#0056b3', fontSize: '16px' }}>Today's Instructions:</strong>
-                <p style={{ marginTop: '8px', color: '#000', fontSize: '14px', lineHeight: '1.5' }}>
+                <p style={{ marginTop: '8px', color: '#000', fontSize: '18px', lineHeight: '1.5', wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
                   {todayRoster.instructions}
                 </p>
               </div>
             )}
           </div>
         ) : (
-          <div className="shift-card">
-            <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
-              📅 No roster found for today.
-              {user.role === 'admin' && (
-                <><br />Please create a weekly roster to get started.</>
-              )}
-            </p>
+          <div className="no-roster-card">
+            <p style={{ fontSize: '32px', marginBottom: '20px' }}>📅</p>
+            <p>No roster found for today.</p>
+            {user.role === 'admin' && (
+              <p>Please create a weekly roster to get started.</p>
+            )}
           </div>
         )}
 
         {/* Admin Controls */}
         {user.role === 'admin' && (
-          <div style={{ padding: '30px 20px 20px' }}>
-            <h3 style={{
-              marginBottom: '20px',
-              color: '#000000',
-              textAlign: 'center',
-              fontSize: '18px'
-            }}>
+          <div className="management-section">
+            <h3 className="management-title">
               Roster Management
             </h3>
-            {!todayRoster ? (
+            {!hasAnyRoster ? (
               <button
                 onClick={handleCreateRoster}
                 className="btn primary"
                 style={{ marginBottom: '15px' }}
               >
-                📝 Create Weekly Roster
+                Create Weekly Roster
               </button>
             ) : (
               <>
@@ -212,22 +204,29 @@ function Dashboard() {
                   className="btn primary"
                   style={{ marginBottom: '15px' }}
                 >
-                  ✏️ Edit Current Roster
+                  Edit Roster
                 </button>
                 <button
                   onClick={handleCreateRoster}
                   className="btn secondary"
                   style={{ marginBottom: '15px' }}
                 >
-                  📝 Create New Roster
+                  Create New Roster
                 </button>
               </>
             )}
             <button
+              onClick={() => navigate('/change-password')}
+              className="btn secondary"
+              style={{ marginBottom: '15px' }}
+            >
+              Change Password
+            </button>
+            <button
               onClick={handleLogout}
               className="btn secondary"
             >
-              🚪 Logout
+              Logout
             </button>
           </div>
         )}
@@ -239,7 +238,7 @@ function Dashboard() {
               onClick={handleLogout}
               className="btn secondary"
             >
-              🚪 Logout
+              Logout
             </button>
           </div>
         )}

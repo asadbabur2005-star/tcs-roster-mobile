@@ -57,8 +57,10 @@ function RosterEdit() {
 
           setInitialData(roster.data, activeMap);
         } else {
-          alert('No roster found to edit. Redirecting to create a new roster.');
-          navigate('/roster/create');
+          setError('No roster found to edit. Please create a roster first.');
+          setTimeout(() => {
+            navigate('/roster/create');
+          }, 2000);
           return;
         }
       } catch (err) {
@@ -69,7 +71,7 @@ function RosterEdit() {
     };
 
     loadRoster();
-  }, [navigate, setInitialData, setError, dayNames]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -135,29 +137,31 @@ function RosterEdit() {
   }
 
   return (
-    <div>
+    <div className="mobile-container">
       <div className="header">
         <h1>Edit Weekly Roster</h1>
         <p>Update the carer schedule for the current week</p>
       </div>
 
-      <RosterForm
-        rosterData={rosterData}
-        activeDays={activeDays}
-        dayNames={dayNames}
-        dayLabels={dayLabels}
-        toggleDay={toggleDay}
-        addCarer={addCarer}
-        removeCarer={removeCarer}
-        updateCarerName={updateCarerName}
-        updateInstructions={updateInstructions}
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        saving={saving}
-        error={error}
-        submitButtonText="Update Roster"
-        showDayToggle={true}
-      />
+      <div style={{ padding: '20px 0 100px 0' }}>
+        <RosterForm
+          rosterData={rosterData}
+          activeDays={activeDays}
+          dayNames={dayNames}
+          dayLabels={dayLabels}
+          toggleDay={toggleDay}
+          addCarer={addCarer}
+          removeCarer={removeCarer}
+          updateCarerName={updateCarerName}
+          updateInstructions={updateInstructions}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          saving={saving}
+          error={error}
+          submitButtonText="Update Roster"
+          showDayToggle={true}
+        />
+      </div>
     </div>
   );
 }

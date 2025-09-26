@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Mobile server runs on port 5001 to avoid conflict with web app
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://tcs-roster-mobile.onrender.com';
+// Production API URL will be set via environment variable
+// Fallback for local development only
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,11 +16,12 @@ const api = axios.create({
 // Add request interceptor for logging
 api.interceptors.request.use(
   (config) => {
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(`🟡 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    console.log('🟡 Request config:', config);
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
+    console.error('🔴 API Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -27,11 +29,13 @@ api.interceptors.request.use(
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    console.log(`API Response: ${response.status} ${response.config.url}`);
+    console.log(`🟢 API Response: ${response.status} ${response.config.url}`);
+    console.log('🟢 Response data:', response.data);
     return response;
   },
   (error) => {
-    console.error('API Response Error:', error.response?.data || error.message);
+    console.error('🔴 API Response Error:', error.response?.data || error.message);
+    console.error('🔴 Full error:', error);
     return Promise.reject(error);
   }
 );
@@ -179,6 +183,25 @@ export const authAPI = {
       return {
         success: false,
         error: error.response?.data?.error || 'Logout failed'
+      };
+    }
+  },
+
+  // Change password
+  changePassword: async (currentPassword, newPassword) => {
+    try {
+      const response = await api.post('/api/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to change password'
       };
     }
   }

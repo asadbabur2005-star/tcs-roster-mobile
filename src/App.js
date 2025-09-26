@@ -5,6 +5,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import RosterCreate from './components/RosterCreate';
 import RosterEdit from './components/RosterEdit';
+import ChangePassword from './components/ChangePassword';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/roster/create" element={<AdminRoute><RosterCreate /></AdminRoute>} />
             <Route path="/roster/edit" element={<AdminRoute><RosterEdit /></AdminRoute>} />
+            <Route path="/change-password" element={<AdminRoute><ChangePassword /></AdminRoute>} />
           </Routes>
         </div>
       </Router>

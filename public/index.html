@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#F4A99C" />
     <meta name="description" content="TCS Roster Mobile - Carer shift management app" />
 
@@ -11,9 +11,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="TCS Roster" />
-
-    <!-- Disable user scaling for better native feel -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 
     <!-- Prevent text size adjustment -->
     <meta name="format-detection" content="telephone=no" />
@@ -90,12 +87,7 @@
         e.preventDefault();
       });
 
-      // Prevent pull to refresh
-      document.body.addEventListener('touchmove', function(e) {
-        if (e.scale !== 1) {
-          e.preventDefault();
-        }
-      }, { passive: false });
+      // Allow normal scrolling - removed touchmove prevention
     </script>
   </body>
 </html>
