@@ -124,6 +124,20 @@ const requireAdmin = (req, res, next) => {
 
 // Routes
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'TCS Roster Mobile API',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth/*',
+      roster: '/api/roster/*'
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({

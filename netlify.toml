@@ -12,7 +12,7 @@
 
 # Environment variables (will be set via Netlify UI)
 [build.environment]
-  REACT_APP_API_URL = ""  # Will be set to Railway backend URL
+  REACT_APP_API_URL = "https://tcs-roster-mobile-1.onrender.com"
 
 # Headers for security
 [[headers]]
