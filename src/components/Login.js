@@ -45,7 +45,7 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-form">
-        <h1>TC's Roster</h1>
+        <h1 className="tcs-roster-title">TC's Roster</h1>
         <p>Admin Login</p>
 
         <form onSubmit={handleSubmit}>

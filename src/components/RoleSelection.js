@@ -60,7 +60,7 @@ function RoleSelection() {
     return (
       <div className="login-container">
         <div className="login-form">
-          <h1>TC's Roster</h1>
+          <h1 className="tcs-roster-title">TC's Roster</h1>
           <p>Enter your name to continue:</p>
 
           <div className="form-group">
@@ -100,7 +100,7 @@ function RoleSelection() {
   return (
     <div className="login-container">
       <div className="login-form">
-        <h1>TC's Roster</h1>
+        <h1 className="tcs-roster-title">TC's Roster</h1>
         <p>Welcome to the mobile app</p>
         <p style={{ fontSize: '14px', color: '#666', marginBottom: '30px' }}>
           Please select your role to continue:

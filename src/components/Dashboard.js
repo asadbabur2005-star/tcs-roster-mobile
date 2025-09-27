@@ -71,7 +71,7 @@ function Dashboard() {
     return (
       <div className="mobile-container">
         <div className="header">
-          <h1>TC's Roster</h1>
+          <h1 className="tcs-roster-title">TC's Roster</h1>
           <p>Welcome, {getUserDisplayName()}</p>
         </div>
         <div className="mobile-loading">
@@ -86,7 +86,7 @@ function Dashboard() {
     return (
       <div className="mobile-container">
         <div className="header">
-          <h1>TC's Roster</h1>
+          <h1 className="tcs-roster-title">TC's Roster</h1>
           <p>Welcome, {getUserDisplayName()}</p>
         </div>
         <div className="shift-card" style={{ backgroundColor: '#f8d7da', border: '2px solid #f5c6cb', margin: '20px' }}>
