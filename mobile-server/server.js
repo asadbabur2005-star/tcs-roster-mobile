@@ -71,8 +71,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'http://192.168.0.106:3001',
+    'https://tcs-roster-mobile1.netlify.app',
     'https://tcs-roster-mobile.netlify.app',
-    'https://your-netlify-app.netlify.app', // Replace with actual Netlify URL
     'capacitor://localhost',
     'ionic://localhost'
   ],
