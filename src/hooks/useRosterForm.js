@@ -47,13 +47,15 @@ export const useRosterForm = (initialRosterData = null, initialActiveDays = null
 
   // Toggle day active state
   const toggleDay = (day) => {
+    const wasActive = activeDays[day];
+
     setActiveDays(prev => ({
       ...prev,
       [day]: !prev[day]
     }));
 
     // If deactivating a day, ensure it has default structure
-    if (activeDays[day]) {
+    if (wasActive) {
       setRosterData(prev => ({
         ...prev,
         [day]: createDefaultDay()
