@@ -214,6 +214,49 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Debug endpoint to check database status
+app.get('/debug/database', (req, res) => {
+  const fs = require('fs');
+
+  const debugInfo = {
+    environment: process.env.NODE_ENV,
+    databasePath: dbPath,
+    databaseDirectory: dataDir,
+    databaseExists: fs.existsSync(dbPath),
+    directoryExists: fs.existsSync(dataDir),
+    timestamp: new Date().toISOString()
+  };
+
+  if (debugInfo.databaseExists) {
+    try {
+      const stats = fs.statSync(dbPath);
+      debugInfo.databaseSize = stats.size;
+      debugInfo.lastModified = stats.mtime;
+    } catch (err) {
+      debugInfo.statsError = err.message;
+    }
+  }
+
+  // Check users and rosters count
+  db.get('SELECT COUNT(*) as userCount FROM users', (err, userResult) => {
+    if (err) {
+      debugInfo.userCountError = err.message;
+    } else {
+      debugInfo.userCount = userResult.userCount;
+    }
+
+    db.get('SELECT COUNT(*) as rosterCount FROM rosters', (err, rosterResult) => {
+      if (err) {
+        debugInfo.rosterCountError = err.message;
+      } else {
+        debugInfo.rosterCount = rosterResult.rosterCount;
+      }
+
+      res.json(debugInfo);
+    });
+  });
+});
+
 // Auth routes
 app.post('/api/auth/login', async (req, res) => {
   try {
