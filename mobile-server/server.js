@@ -3,8 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
@@ -12,117 +11,89 @@ const app = express();
 const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? undefined : 5001);
 const JWT_SECRET = process.env.JWT_SECRET || 'mobile-roster-secret-key-2024';
 
-// Database setup with comprehensive persistence handling
-let dbPath = process.env.DATABASE_PATH ||
-  (process.env.NODE_ENV === 'production'
-    ? path.join('/var/data', 'roster.db')  // Render persistent disk location
-    : path.join(__dirname, 'roster.db'));
-
+// PostgreSQL Database setup
 console.log(`🔍 Environment: ${process.env.NODE_ENV}`);
-console.log(`💾 Initial database path: ${dbPath}`);
 
-// Ensure database directory exists and add comprehensive logging
-let dataDir = path.dirname(dbPath);
+// PostgreSQL connection configuration
+const dbConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+};
 
-// Check if directory exists and is writable
-try {
-  if (!require('fs').existsSync(dataDir)) {
-    console.log(`📂 Creating database directory: ${dataDir}`);
-    require('fs').mkdirSync(dataDir, { recursive: true });
-  }
+console.log(`🐘 Connecting to PostgreSQL...`);
+const db = new Pool(dbConfig);
 
-  // Test write permissions
-  const testFile = path.join(dataDir, 'test-write.tmp');
-  require('fs').writeFileSync(testFile, 'test');
-  require('fs').unlinkSync(testFile);
-  console.log(`✅ Database directory is writable`);
-
-} catch (error) {
-  console.error(`❌ Database directory setup error:`, error);
-  console.log(`🔄 Falling back to current directory for database`);
-
-  // Update dbPath to fallback location
-  dbPath = path.join(__dirname, 'roster.db');
-  dataDir = path.dirname(dbPath);
-  console.log(`📍 Using fallback database path: ${dbPath}`);
-}
-
-// Final database path check
-console.log(`📁 Final database directory: ${dataDir}`);
-console.log(`💾 Final database path: ${dbPath}`);
-
-// Check if database file exists
-if (require('fs').existsSync(dbPath)) {
-  const stats = require('fs').statSync(dbPath);
-  console.log(`📊 Existing database file size: ${stats.size} bytes`);
-  console.log(`📅 Database last modified: ${stats.mtime}`);
-} else {
-  console.log(`🆕 Database file will be created at: ${dbPath}`);
-}
-
-const db = new sqlite3.Database(dbPath, (err) => {
+// Test database connection
+db.connect((err, client, release) => {
   if (err) {
-    console.error('❌ Failed to open database:', err);
+    console.error('❌ Failed to connect to PostgreSQL:', err);
   } else {
-    console.log('✅ Database connection established');
+    console.log('✅ PostgreSQL connection established');
+    release();
   }
 });
 
 // Initialize database tables
-db.serialize(() => {
-  console.log('🔧 Initializing database tables...');
-  // Users table
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT,
-    role TEXT NOT NULL DEFAULT 'carer',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+const initializeDatabase = async () => {
+  try {
+    console.log('🔧 Initializing PostgreSQL database tables...');
 
-  // Rosters table
-  db.run(`CREATE TABLE IF NOT EXISTS rosters (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    data TEXT NOT NULL,
-    active_days TEXT NOT NULL,
-    created_by INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users (id)
-  )`);
+    // Users table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255),
+        role VARCHAR(50) NOT NULL DEFAULT 'carer',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  // Create admin user
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-  const hashedPassword = bcrypt.hashSync(adminPassword, 10);
-  console.log('👤 Creating/verifying admin user...');
-  db.run(`INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)`,
-    ['admin', hashedPassword, 'admin'], function(err) {
-      if (err) {
-        console.error('❌ Error creating admin user:', err);
-      } else {
-        if (this.changes > 0) {
-          console.log('✅ Admin user created');
-        } else {
-          console.log('👤 Admin user already exists');
-        }
-      }
+    // Rosters table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS rosters (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        data TEXT NOT NULL,
+        active_days TEXT NOT NULL,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create admin user
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+    console.log('👤 Creating/verifying admin user...');
+
+    const adminResult = await db.query(
+      `INSERT INTO users (username, password, role) VALUES ($1, $2, $3)
+       ON CONFLICT (username) DO NOTHING RETURNING id`,
+      ['admin', hashedPassword, 'admin']
+    );
+
+    if (adminResult.rows.length > 0) {
+      console.log('✅ Admin user created');
+    } else {
+      console.log('👤 Admin user already exists');
+    }
+
+    // Log existing rosters on startup for debugging
+    const rosterResult = await db.query(`SELECT id, name, created_at, updated_at FROM rosters ORDER BY updated_at DESC`);
+    console.log(`📊 Found ${rosterResult.rows.length} existing rosters in database:`);
+    rosterResult.rows.forEach(roster => {
+      console.log(`  - ID: ${roster.id}, Name: ${roster.name}, Updated: ${roster.updated_at}`);
     });
 
-  // Log existing rosters on startup for debugging
-  db.all(`SELECT id, name, created_at, updated_at FROM rosters ORDER BY updated_at DESC`, (err, rosters) => {
-    if (err) {
-      console.error('❌ Error checking existing rosters:', err);
-    } else {
-      console.log(`📊 Found ${rosters.length} existing rosters in database:`);
-      rosters.forEach(roster => {
-        console.log(`  - ID: ${roster.id}, Name: ${roster.name}, Updated: ${roster.updated_at}`);
-      });
-    }
-  });
+    console.log('✅ PostgreSQL database initialized');
+  } catch (error) {
+    console.error('❌ Database initialization error:', error);
+  }
+};
 
-  console.log('✅ Database initialized');
-});
+// Initialize database
+initializeDatabase();
 
 // Middleware
 app.use(helmet({
@@ -197,6 +168,7 @@ app.get('/', (req, res) => {
     message: 'TCS Roster Mobile API',
     status: 'running',
     version: '1.0.0',
+    database: 'PostgreSQL',
     endpoints: {
       health: '/health',
       auth: '/api/auth/*',
@@ -215,46 +187,35 @@ app.get('/health', (req, res) => {
 });
 
 // Debug endpoint to check database status
-app.get('/debug/database', (req, res) => {
-  const fs = require('fs');
+app.get('/debug/database', async (req, res) => {
+  try {
+    const debugInfo = {
+      environment: process.env.NODE_ENV,
+      databaseType: 'PostgreSQL',
+      timestamp: new Date().toISOString()
+    };
 
-  const debugInfo = {
-    environment: process.env.NODE_ENV,
-    databasePath: dbPath,
-    databaseDirectory: dataDir,
-    databaseExists: fs.existsSync(dbPath),
-    directoryExists: fs.existsSync(dataDir),
-    timestamp: new Date().toISOString()
-  };
+    // Test database connection
+    const client = await db.connect();
+    debugInfo.connectionStatus = 'Connected';
+    client.release();
 
-  if (debugInfo.databaseExists) {
-    try {
-      const stats = fs.statSync(dbPath);
-      debugInfo.databaseSize = stats.size;
-      debugInfo.lastModified = stats.mtime;
-    } catch (err) {
-      debugInfo.statsError = err.message;
-    }
-  }
+    // Check users and rosters count
+    const userResult = await db.query('SELECT COUNT(*) as count FROM users');
+    debugInfo.userCount = parseInt(userResult.rows[0].count);
 
-  // Check users and rosters count
-  db.get('SELECT COUNT(*) as userCount FROM users', (err, userResult) => {
-    if (err) {
-      debugInfo.userCountError = err.message;
-    } else {
-      debugInfo.userCount = userResult.userCount;
-    }
+    const rosterResult = await db.query('SELECT COUNT(*) as count FROM rosters');
+    debugInfo.rosterCount = parseInt(rosterResult.rows[0].count);
 
-    db.get('SELECT COUNT(*) as rosterCount FROM rosters', (err, rosterResult) => {
-      if (err) {
-        debugInfo.rosterCountError = err.message;
-      } else {
-        debugInfo.rosterCount = rosterResult.rosterCount;
-      }
-
-      res.json(debugInfo);
+    res.json(debugInfo);
+  } catch (error) {
+    res.status(500).json({
+      environment: process.env.NODE_ENV,
+      databaseType: 'PostgreSQL',
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
-  });
+  }
 });
 
 // Auth routes
@@ -266,100 +227,105 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Username is required' });
     }
 
-    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
+    const userResult = await db.query('SELECT * FROM users WHERE username = $1', [username]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = userResult.rows[0];
+
+    // Admin login requires password
+    if (user.role === 'admin') {
+      if (!password) {
+        return res.status(400).json({ error: 'Password is required for admin' });
       }
 
-      if (!user) {
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
+    }
 
-      // Admin login requires password
-      if (user.role === 'admin') {
-        if (!password) {
-          return res.status(400).json({ error: 'Password is required for admin' });
-        }
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-          return res.status(401).json({ error: 'Invalid credentials' });
-        }
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      domain: process.env.NODE_ENV === 'production' ? undefined : undefined
+    });
+
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role
       }
-
-      const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        domain: process.env.NODE_ENV === 'production' ? undefined : undefined
-      });
-
-      res.json({
-        user: {
-          id: user.id,
-          username: user.username,
-          role: user.role
-        }
-      });
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 // Carer role selection (no password required)
-app.post('/api/auth/carer-login', (req, res) => {
-  const { name } = req.body;
+app.post('/api/auth/carer-login', async (req, res) => {
+  try {
+    const { name } = req.body;
 
-  if (!name || name.trim().length === 0) {
-    return res.status(400).json({ error: 'Carer name is required' });
-  }
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Carer name is required' });
+    }
 
-  const username = name.trim().toLowerCase().replace(/\s+/g, '_');
+    const username = name.trim().toLowerCase().replace(/\s+/g, '_');
 
-  // Insert or get carer user
-  db.run(`INSERT OR IGNORE INTO users (username, role) VALUES (?, ?)`,
-    [username, 'carer'], function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
+    // Insert or get carer user
+    const insertResult = await db.query(
+      `INSERT INTO users (username, role) VALUES ($1, $2)
+       ON CONFLICT (username) DO NOTHING RETURNING *`,
+      [username, 'carer']
+    );
 
-      db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
-        if (err) {
-          return res.status(500).json({ error: 'Database error' });
-        }
+    let user;
+    if (insertResult.rows.length > 0) {
+      user = insertResult.rows[0];
+    } else {
+      const userResult = await db.query('SELECT * FROM users WHERE username = $1', [username]);
+      user = userResult.rows[0];
+    }
 
-        const token = jwt.sign(
-          { id: user.id, username: user.username, role: user.role },
-          JWT_SECRET,
-          { expiresIn: '24h' }
-        );
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-        res.cookie('token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-          maxAge: 24 * 60 * 60 * 1000,
-          domain: process.env.NODE_ENV === 'production' ? undefined : undefined
-        });
-
-        res.json({
-          user: {
-            id: user.id,
-            username: user.username,
-            role: user.role,
-            displayName: name.trim()
-          }
-        });
-      });
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
+      domain: process.env.NODE_ENV === 'production' ? undefined : undefined
     });
+
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        displayName: name.trim()
+      }
+    });
+  } catch (error) {
+    console.error('Carer login error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.post('/api/auth/logout', (req, res) => {
@@ -368,20 +334,22 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // Roster routes
-app.get('/api/roster/current', authenticateToken, (req, res) => {
-  console.log(`🔍 User ${req.user.username} requesting current roster`);
-  db.get(`SELECT * FROM rosters ORDER BY updated_at DESC LIMIT 1`, (err, roster) => {
-    if (err) {
-      console.error('❌ Database error fetching current roster:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
+app.get('/api/roster/current', authenticateToken, async (req, res) => {
+  try {
+    console.log(`🔍 User ${req.user.username} requesting current roster`);
 
-    if (!roster) {
+    const result = await db.query(
+      `SELECT * FROM rosters ORDER BY updated_at DESC LIMIT 1`
+    );
+
+    if (result.rows.length === 0) {
       console.log('📭 No roster found in database');
       return res.json({ roster: null });
     }
 
+    const roster = result.rows[0];
     console.log(`✅ Found roster: ID ${roster.id}, Name: ${roster.name}, Updated: ${roster.updated_at}`);
+
     const rosterData = {
       id: roster.id,
       name: roster.name,
@@ -392,21 +360,23 @@ app.get('/api/roster/current', authenticateToken, (req, res) => {
     };
 
     res.json({ roster: rosterData });
-  });
+  } catch (error) {
+    console.error('❌ Database error fetching current roster:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.get('/api/roster/:id', authenticateToken, (req, res) => {
-  const rosterId = req.params.id;
+app.get('/api/roster/:id', authenticateToken, async (req, res) => {
+  try {
+    const rosterId = req.params.id;
 
-  db.get(`SELECT * FROM rosters WHERE id = ?`, [rosterId], (err, roster) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+    const result = await db.query(`SELECT * FROM rosters WHERE id = $1`, [rosterId]);
 
-    if (!roster) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Roster not found' });
     }
 
+    const roster = result.rows[0];
     const rosterData = {
       id: roster.id,
       name: roster.name,
@@ -417,88 +387,95 @@ app.get('/api/roster/:id', authenticateToken, (req, res) => {
     };
 
     res.json({ roster: rosterData });
-  });
-});
-
-app.post('/api/roster', authenticateToken, requireAdmin, (req, res) => {
-  const { name, data, activeDays } = req.body;
-
-  if (!name || !data || !activeDays) {
-    return res.status(400).json({ error: 'Name, data, and activeDays are required' });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Database error' });
   }
-
-  console.log(`📝 Admin ${req.user.username} creating roster: ${name}`);
-  db.run(`INSERT INTO rosters (name, data, active_days, created_by) VALUES (?, ?, ?, ?)`,
-    [name, JSON.stringify(data), JSON.stringify(activeDays), req.user.id],
-    function(err) {
-      if (err) {
-        console.error('❌ Database error creating roster:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      console.log(`✅ Roster created successfully with ID: ${this.lastID}`);
-      res.json({
-        message: 'Roster created successfully',
-        rosterId: this.lastID
-      });
-    });
 });
 
-app.put('/api/roster/:id', authenticateToken, requireAdmin, (req, res) => {
-  const rosterId = req.params.id;
-  const { name, data, activeDays } = req.body;
+app.post('/api/roster', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { name, data, activeDays } = req.body;
 
-  if (!name || !data || !activeDays) {
-    return res.status(400).json({ error: 'Name, data, and activeDays are required' });
-  }
-
-  db.run(`UPDATE rosters SET name = ?, data = ?, active_days = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-    [name, JSON.stringify(data), JSON.stringify(activeDays), rosterId],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Roster not found' });
-      }
-
-      res.json({ message: 'Roster updated successfully' });
-    });
-});
-
-app.get('/api/rosters', authenticateToken, requireAdmin, (req, res) => {
-  db.all(`SELECT id, name, created_at, updated_at FROM rosters ORDER BY updated_at DESC`, (err, rosters) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
+    if (!name || !data || !activeDays) {
+      return res.status(400).json({ error: 'Name, data, and activeDays are required' });
     }
 
-    res.json({ rosters });
-  });
+    console.log(`📝 Admin ${req.user.username} creating roster: ${name}`);
+
+    const result = await db.query(
+      `INSERT INTO rosters (name, data, active_days, created_by) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [name, JSON.stringify(data), JSON.stringify(activeDays), req.user.id]
+    );
+
+    console.log(`✅ Roster created successfully with ID: ${result.rows[0].id}`);
+    res.json({
+      message: 'Roster created successfully',
+      rosterId: result.rows[0].id
+    });
+  } catch (error) {
+    console.error('❌ Database error creating roster:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.put('/api/roster/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const rosterId = req.params.id;
+    const { name, data, activeDays } = req.body;
+
+    if (!name || !data || !activeDays) {
+      return res.status(400).json({ error: 'Name, data, and activeDays are required' });
+    }
+
+    const result = await db.query(
+      `UPDATE rosters SET name = $1, data = $2, active_days = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4`,
+      [name, JSON.stringify(data), JSON.stringify(activeDays), rosterId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Roster not found' });
+    }
+
+    res.json({ message: 'Roster updated successfully' });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.get('/api/rosters', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await db.query(`SELECT id, name, created_at, updated_at FROM rosters ORDER BY updated_at DESC`);
+    res.json({ rosters: result.rows });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Change Password endpoint
 app.post('/api/auth/change-password', authenticateToken, requireAdmin, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const userId = req.user.id;
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
 
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: 'Current password and new password are required' });
-  }
-
-  if (newPassword.length < 6) {
-    return res.status(400).json({ error: 'New password must be at least 6 characters' });
-  }
-
-  // Get current user data
-  db.get(`SELECT password FROM users WHERE id = ?`, [userId], async (err, user) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
     }
 
-    if (!user) {
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    // Get current user data
+    const userResult = await db.query(`SELECT password FROM users WHERE id = $1`, [userId]);
+
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    const user = userResult.rows[0];
 
     // Verify current password
     const validPassword = await bcrypt.compare(currentPassword, user.password);
@@ -510,14 +487,13 @@ app.post('/api/auth/change-password', authenticateToken, requireAdmin, async (re
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password in database
-    db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashedNewPassword, userId], function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to update password' });
-      }
+    await db.query(`UPDATE users SET password = $1 WHERE id = $2`, [hashedNewPassword, userId]);
 
-      res.json({ message: 'Password changed successfully' });
-    });
-  });
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
 });
 
 // Server-Sent Events for real-time updates
@@ -545,18 +521,18 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`📱 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Admin credentials: admin / ${process.env.ADMIN_PASSWORD || 'admin123'}`);
   console.log(`👥 Carers can access via name selection (no password)`);
-  console.log(`💾 Using SQLite database: ${dbPath}\n`);
+  console.log(`🐘 Using PostgreSQL database for persistence\n`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('Shutting down server...');
-  db.close();
+  db.end();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('Shutting down server...');
-  db.close();
+  db.end();
   process.exit(0);
 });

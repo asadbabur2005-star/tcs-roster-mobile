@@ -17,7 +17,7 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
     "cookie-parser": "^1.4.6",
-    "sqlite3": "^5.1.6",
+    "pg": "^8.11.0",
     "helmet": "^7.0.0",
     "express-rate-limit": "^6.7.0",
     "express-validator": "^6.15.0"
