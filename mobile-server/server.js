@@ -75,6 +75,7 @@ app.use(cors({
     'https://tcs-roster-mobile.netlify.app',
     'https://tcs-roster-mobile-q0kpv8uoy-asads-projects-eb6117b2.vercel.app',
     'https://tcs-roster-mobile-d6valrbyz-asads-projects-eb6117b2.vercel.app',
+    'https://tcs-roster-mobile.vercel.app',
     'capacitor://localhost',
     'ionic://localhost'
   ],
