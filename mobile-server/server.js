@@ -12,27 +12,65 @@ const app = express();
 const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? undefined : 5001);
 const JWT_SECRET = process.env.JWT_SECRET || 'mobile-roster-secret-key-2024';
 
-// Database setup
-// In production (Render), use /opt/render/project/src for persistence
-// Render's persistent disk is mounted at /opt/render/project/src
-const dbPath = process.env.NODE_ENV === 'production'
-  ? path.join('/opt/render/project/src', 'roster.db')
-  : path.join(__dirname, 'roster.db');
+// Database setup with comprehensive persistence handling
+let dbPath = process.env.DATABASE_PATH ||
+  (process.env.NODE_ENV === 'production'
+    ? path.join('/var/data', 'roster.db')  // Render persistent disk location
+    : path.join(__dirname, 'roster.db'));
 
-// Ensure database directory exists in production
-if (process.env.NODE_ENV === 'production') {
-  const dataDir = path.dirname(dbPath);
+console.log(`🔍 Environment: ${process.env.NODE_ENV}`);
+console.log(`💾 Initial database path: ${dbPath}`);
+
+// Ensure database directory exists and add comprehensive logging
+let dataDir = path.dirname(dbPath);
+
+// Check if directory exists and is writable
+try {
   if (!require('fs').existsSync(dataDir)) {
+    console.log(`📂 Creating database directory: ${dataDir}`);
     require('fs').mkdirSync(dataDir, { recursive: true });
   }
-  console.log(`📁 Database directory: ${dataDir}`);
-  console.log(`💾 Database path: ${dbPath}`);
+
+  // Test write permissions
+  const testFile = path.join(dataDir, 'test-write.tmp');
+  require('fs').writeFileSync(testFile, 'test');
+  require('fs').unlinkSync(testFile);
+  console.log(`✅ Database directory is writable`);
+
+} catch (error) {
+  console.error(`❌ Database directory setup error:`, error);
+  console.log(`🔄 Falling back to current directory for database`);
+
+  // Update dbPath to fallback location
+  dbPath = path.join(__dirname, 'roster.db');
+  dataDir = path.dirname(dbPath);
+  console.log(`📍 Using fallback database path: ${dbPath}`);
 }
 
-const db = new sqlite3.Database(dbPath);
+// Final database path check
+console.log(`📁 Final database directory: ${dataDir}`);
+console.log(`💾 Final database path: ${dbPath}`);
+
+// Check if database file exists
+if (require('fs').existsSync(dbPath)) {
+  const stats = require('fs').statSync(dbPath);
+  console.log(`📊 Existing database file size: ${stats.size} bytes`);
+  console.log(`📅 Database last modified: ${stats.mtime}`);
+} else {
+  console.log(`🆕 Database file will be created at: ${dbPath}`);
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('❌ Failed to open database:', err);
+  } else {
+    console.log('✅ Database connection established');
+  }
+});
 
 // Initialize database tables
 db.serialize(() => {
+  console.log('🔧 Initializing database tables...');
   // Users table
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,8 +95,19 @@ db.serialize(() => {
   // Create admin user
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+  console.log('👤 Creating/verifying admin user...');
   db.run(`INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)`,
-    ['admin', hashedPassword, 'admin']);
+    ['admin', hashedPassword, 'admin'], function(err) {
+      if (err) {
+        console.error('❌ Error creating admin user:', err);
+      } else {
+        if (this.changes > 0) {
+          console.log('✅ Admin user created');
+        } else {
+          console.log('👤 Admin user already exists');
+        }
+      }
+    });
 
   // Log existing rosters on startup for debugging
   db.all(`SELECT id, name, created_at, updated_at FROM rosters ORDER BY updated_at DESC`, (err, rosters) => {
