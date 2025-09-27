@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Production API URL will be set via environment variable
-// Fallback for local development only
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+// Production API URL - hardcoded for deployment
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://tcs-roster-mobile-1.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
