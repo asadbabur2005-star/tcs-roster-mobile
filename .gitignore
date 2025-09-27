@@ -42,3 +42,4 @@ ios/build/
 # Cache
 .cache/
 .temp/
+.vercel

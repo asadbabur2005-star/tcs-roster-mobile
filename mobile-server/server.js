@@ -73,6 +73,7 @@ app.use(cors({
     'http://192.168.0.106:3001',
     'https://tcs-roster-mobile1.netlify.app',
     'https://tcs-roster-mobile.netlify.app',
+    'https://tcs-roster-mobile-q0kpv8uoy-asads-projects-eb6117b2.vercel.app',
     'capacitor://localhost',
     'ionic://localhost'
   ],
