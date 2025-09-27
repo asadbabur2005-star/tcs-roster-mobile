@@ -177,7 +177,18 @@ export const useRosterForm = (initialRosterData = null, initialActiveDays = null
   // Set roster data (useful for edit mode)
   const setInitialData = (data, days) => {
     if (data) {
-      setRosterData(data);
+      // Ensure all days have proper structure
+      const completeData = createInitialRosterData();
+      Object.keys(data).forEach(day => {
+        if (completeData[day]) {
+          completeData[day] = {
+            morning: data[day].morning || [{ name: '' }, { name: '' }],
+            evening: data[day].evening || [{ name: '' }, { name: '' }],
+            instructions: data[day].instructions || ''
+          };
+        }
+      });
+      setRosterData(completeData);
     }
     if (days) {
       setActiveDays(days);

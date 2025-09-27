@@ -31,8 +31,9 @@ const RosterForm = ({
 
   // Optimize callbacks to prevent unnecessary re-renders
   const handleToggleDay = useCallback((day) => {
+    const wasActive = activeDays[day];
     toggleDay(day);
-    announceToScreenReader(`${day} ${activeDays[day] ? 'included' : 'excluded'} in roster`);
+    announceToScreenReader(`${day} ${wasActive ? 'excluded from' : 'included in'} roster`);
   }, [toggleDay, activeDays]);
 
   const handleAddCarer = useCallback((day, shift) => {

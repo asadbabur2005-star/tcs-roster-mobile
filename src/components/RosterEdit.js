@@ -44,14 +44,16 @@ function RosterEdit() {
 
           // Set up active days based on existing roster data
           const activeMap = {};
-          Object.keys(roster.data).forEach(day => {
-            activeMap[day] = true;
+
+          // Initialize all days as inactive first
+          dayNames.forEach(day => {
+            activeMap[day] = false;
           });
 
-          // Fill in missing days as inactive
-          dayNames.forEach(day => {
-            if (!activeMap[day]) {
-              activeMap[day] = false;
+          // Mark days with data as active
+          Object.keys(roster.data).forEach(day => {
+            if (dayNames.includes(day)) {
+              activeMap[day] = true;
             }
           });
 
