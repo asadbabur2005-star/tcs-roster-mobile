@@ -13,17 +13,20 @@ const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? undefi
 const JWT_SECRET = process.env.JWT_SECRET || 'mobile-roster-secret-key-2024';
 
 // Database setup
-// In production (Render), use /opt/render/project/src/data directory for persistence
+// In production (Render), use /opt/render/project/src for persistence
+// Render's persistent disk is mounted at /opt/render/project/src
 const dbPath = process.env.NODE_ENV === 'production'
-  ? path.join(process.cwd(), 'data', 'roster.db')
+  ? path.join('/opt/render/project/src', 'roster.db')
   : path.join(__dirname, 'roster.db');
 
-// Ensure data directory exists in production
+// Ensure database directory exists in production
 if (process.env.NODE_ENV === 'production') {
   const dataDir = path.dirname(dbPath);
   if (!require('fs').existsSync(dataDir)) {
     require('fs').mkdirSync(dataDir, { recursive: true });
   }
+  console.log(`📁 Database directory: ${dataDir}`);
+  console.log(`💾 Database path: ${dbPath}`);
 }
 
 const db = new sqlite3.Database(dbPath);
@@ -56,6 +59,18 @@ db.serialize(() => {
   const hashedPassword = bcrypt.hashSync(adminPassword, 10);
   db.run(`INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)`,
     ['admin', hashedPassword, 'admin']);
+
+  // Log existing rosters on startup for debugging
+  db.all(`SELECT id, name, created_at, updated_at FROM rosters ORDER BY updated_at DESC`, (err, rosters) => {
+    if (err) {
+      console.error('❌ Error checking existing rosters:', err);
+    } else {
+      console.log(`📊 Found ${rosters.length} existing rosters in database:`);
+      rosters.forEach(roster => {
+        console.log(`  - ID: ${roster.id}, Name: ${roster.name}, Updated: ${roster.updated_at}`);
+      });
+    }
+  });
 
   console.log('✅ Database initialized');
 });
@@ -262,15 +277,19 @@ app.post('/api/auth/logout', (req, res) => {
 
 // Roster routes
 app.get('/api/roster/current', authenticateToken, (req, res) => {
+  console.log(`🔍 User ${req.user.username} requesting current roster`);
   db.get(`SELECT * FROM rosters ORDER BY updated_at DESC LIMIT 1`, (err, roster) => {
     if (err) {
+      console.error('❌ Database error fetching current roster:', err);
       return res.status(500).json({ error: 'Database error' });
     }
 
     if (!roster) {
+      console.log('📭 No roster found in database');
       return res.json({ roster: null });
     }
 
+    console.log(`✅ Found roster: ID ${roster.id}, Name: ${roster.name}, Updated: ${roster.updated_at}`);
     const rosterData = {
       id: roster.id,
       name: roster.name,
@@ -316,13 +335,16 @@ app.post('/api/roster', authenticateToken, requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'Name, data, and activeDays are required' });
   }
 
+  console.log(`📝 Admin ${req.user.username} creating roster: ${name}`);
   db.run(`INSERT INTO rosters (name, data, active_days, created_by) VALUES (?, ?, ?, ?)`,
     [name, JSON.stringify(data), JSON.stringify(activeDays), req.user.id],
     function(err) {
       if (err) {
+        console.error('❌ Database error creating roster:', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
+      console.log(`✅ Roster created successfully with ID: ${this.lastID}`);
       res.json({
         message: 'Roster created successfully',
         rosterId: this.lastID

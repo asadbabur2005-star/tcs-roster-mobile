@@ -161,13 +161,14 @@ function Dashboard() {
             {todayRoster.instructions && (
               <div style={{
                 margin: '20px',
-                padding: '15px',
-                backgroundColor: '#e7f3ff',
-                borderRadius: '8px',
-                border: '2px solid #b3d9ff'
+                padding: '18px 20px',
+                backgroundColor: '#F4A99C',
+                borderRadius: '15px',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(244, 169, 156, 0.3)'
               }}>
-                <strong style={{ color: '#0056b3', fontSize: '16px' }}>Today's Instructions:</strong>
-                <p style={{ marginTop: '8px', color: '#000', fontSize: '18px', lineHeight: '1.5', wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                <strong style={{ color: '#000000', fontSize: '16px' }}>Today's Instructions:</strong>
+                <p style={{ marginTop: '8px', color: '#000000', fontSize: '18px', lineHeight: '1.5', wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
                   {todayRoster.instructions}
                 </p>
               </div>

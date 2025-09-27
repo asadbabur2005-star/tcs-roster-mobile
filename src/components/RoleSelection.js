@@ -5,7 +5,7 @@ import { authAPI } from '../services/api';
 
 function RoleSelection() {
   const navigate = useNavigate();
-  const { setCarerMode } = useAuth();
+  const { login } = useAuth();
   const [carerName, setCarerName] = useState('');
   const [showCarerInput, setShowCarerInput] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,12 @@ function RoleSelection() {
       const result = await authAPI.carerLogin(carerName.trim());
 
       if (result.success) {
-        setCarerMode(carerName.trim());
+        login({
+          id: result.data.user.id,
+          username: result.data.user.username,
+          role: result.data.user.role,
+          displayName: result.data.user.displayName
+        });
         navigate('/dashboard');
       } else {
         setError(result.error || 'Login failed');

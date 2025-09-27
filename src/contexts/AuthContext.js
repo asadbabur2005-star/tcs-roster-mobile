@@ -28,15 +28,6 @@ export function AuthProvider({ children }) {
     localStorage.setItem('tcs_roster_mobile_user', JSON.stringify(userData));
   };
 
-  const setCarerMode = (carerName) => {
-    const carerUser = {
-      username: carerName.toLowerCase().replace(/\s+/g, '_'),
-      displayName: carerName,
-      role: 'carer'
-    };
-    setUser(carerUser);
-    localStorage.setItem('tcs_roster_mobile_user', JSON.stringify(carerUser));
-  };
 
   const logout = async () => {
     try {
@@ -52,7 +43,6 @@ export function AuthProvider({ children }) {
     user,
     login,
     logout,
-    setCarerMode,
     loading
   };
 
